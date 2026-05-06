@@ -1,1 +1,231 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Lab: Pirolisi</title>
+    <!-- Carichiamo AlaSQL: un motore SQL leggerissimo in Javascript -->
+    <script src="https://cdn.jsdelivr.net/npm/alasql@4"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        h1 {
+            font-size: 1.5rem;
+            margin-top: 0;
+        }
+        details {
+            background: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            margin-bottom: 15px;
+        }
+        summary {
+            font-weight: bold;
+            cursor: pointer;
+            outline: none;
+        }
+        pre {
+            background: #272822;
+            color: #f8f8f2;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 1rem;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            resize: vertical;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:active {
+            background-color: #0056b3;
+        }
+        #error-msg {
+            color: #d9534f;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        /* Stili per la tabella dei risultati */
+        .table-container {
+            margin-top: 15px;
+            overflow-x: auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
 
+    <h1>🧪 SQL Mobile Lab</h1>
+
+    <!-- Visualizzazione Schema Tabelle -->
+    <details>
+        <summary>🔍 Visualizza Schema Database (Clicca per aprire)</summary>
+        <pre>
+### 1. Area Feedstock & Analisi
+
+**feedstocks**
+- id (STRING)
+- nome_esteso (STRING)
+- categoria (STRING)
+
+**analisi_elementare_fs**
+- id (INT)
+- feedstock_id (STRING)
+- c_mean (FLOAT)
+- ash (FLOAT)
+
+### 2. Area Ricette e Processi
+
+**pirolisi_ricetta**
+- id_prova (STRING)
+- feedstock_id (STRING)
+- percentuale (FLOAT)
+
+**prove_pirolisi**
+- id_prova (STRING)
+- temperatura (FLOAT)
+- catalizzatore (STRING)
+
+**runs_pirolisi**
+- id_run (STRING)
+- id_prova (STRING)
+- resa_olio (FLOAT)
+- resa_char (FLOAT)
+- resa_gas (FLOAT)
+
+### 3. Area Analisi Chimica
+
+**dati_gcms**
+- id (INT)
+- target_id (STRING)
+- compound_name (STRING)
+- area_perc (FLOAT)
+- famiglia (STRING)
+        </pre>
+    </details>
+
+    <!-- Area Query -->
+    <textarea id="sql-query" spellcheck="false">SELECT * FROM runs_pirolisi 
+JOIN prove_pirolisi ON runs_pirolisi.id_prova = prove_pirolisi.id_prova</textarea>
+    <button onclick="eseguiQuery()">Esegui Query ▶️</button>
+
+    <div id="error-msg"></div>
+    <div id="result-container" class="table-container"></div>
+
+    <script>
+        // --- 1. SETUP DATABASE IN MEMORIA CON ALASQL ---
+        function initDB() {
+            // Creazione tabelle
+            alasql("CREATE TABLE feedstocks (id STRING, nome_esteso STRING, categoria STRING)");
+            alasql("CREATE TABLE analisi_elementare_fs (id INT, feedstock_id STRING, c_mean FLOAT, ash FLOAT)");
+            alasql("CREATE TABLE pirolisi_ricetta (id_prova STRING, feedstock_id STRING, percentuale FLOAT)");
+            alasql("CREATE TABLE prove_pirolisi (id_prova STRING, temperatura FLOAT, catalizzatore STRING)");
+            alasql("CREATE TABLE runs_pirolisi (id_run STRING, id_prova STRING, resa_olio FLOAT, resa_char FLOAT, resa_gas FLOAT)");
+            alasql("CREATE TABLE dati_gcms (id INT, target_id STRING, compound_name STRING, area_perc FLOAT, famiglia STRING)");
+
+            // Inserimento Dati Mock
+            alasql("INSERT INTO feedstocks VALUES ('FS_001', 'Wood Chips', 'Biomass'), ('FS_002', 'Wheat Straw', 'Biomass'), ('CAT_Z1', 'Zeolite ZSM-5', 'Catalyst'), ('CAT_A1', 'Alumina', 'Catalyst')");
+            alasql("INSERT INTO analisi_elementare_fs VALUES (1, 'FS_001', 45.2, 1.5), (2, 'FS_002', 40.8, 5.2)");
+            alasql("INSERT INTO pirolisi_ricetta VALUES ('PR_101', 'FS_001', 100.0), ('PR_102', 'FS_001', 50.0), ('PR_102', 'FS_002', 50.0), ('PR_103', 'FS_001', 100.0)");
+            alasql("INSERT INTO prove_pirolisi VALUES ('PR_101', 500.0, 'CAT_Z1'), ('PR_102', 550.0, NULL), ('PR_103', 600.0, 'CAT_A1')");
+            alasql("INSERT INTO runs_pirolisi VALUES ('RUN_01', 'PR_101', 45.5, 20.0, 34.5), ('RUN_02', 'PR_101', 47.0, 18.0, 35.0), ('RUN_03', 'PR_102', 40.0, 30.0, 30.0), ('RUN_04', 'PR_103', 38.5, 25.0, 36.5)");
+            alasql("INSERT INTO dati_gcms VALUES (1, 'RUN_01', 'Phenol', 12.5, 'Phenols'), (2, 'RUN_01', 'Toluene', 5.2, 'Aromatics'), (3, 'RUN_02', '2-Methylphenol', 13.1, 'Phenols')");
+        }
+
+        // Inizializza il database all'avvio
+        initDB();
+
+        // --- 2. LOGICA ESECUZIONE QUERY ---
+        function eseguiQuery() {
+            const query = document.getElementById('sql-query').value;
+            const resultContainer = document.getElementById('result-container');
+            const errorMsg = document.getElementById('error-msg');
+            
+            // Reset UI
+            resultContainer.innerHTML = "";
+            errorMsg.innerText = "";
+
+            try {
+                // Esegue la query usando AlaSQL
+                const data = alasql(query);
+                
+                if (data.length === 0) {
+                    resultContainer.innerHTML = "<div style='padding:10px;'>Nessun risultato trovato.</div>";
+                    return;
+                }
+
+                // Creazione della tabella HTML
+                let tableHtml = "<table><thead><tr>";
+                
+                // Intestazioni (chiavi del primo oggetto)
+                const columns = Object.keys(data[0]);
+                columns.forEach(col => {
+                    tableHtml += `<th>${col}</th>`;
+                });
+                tableHtml += "</tr></thead><tbody>";
+
+                // Righe
+                data.forEach(row => {
+                    tableHtml += "<tr>";
+                    columns.forEach(col => {
+                        let val = row[col];
+                        if(val === undefined || val === null) val = "<em>NULL</em>";
+                        tableHtml += `<td>${val}</td>`;
+                    });
+                    tableHtml += "</tr>";
+                });
+
+                tableHtml += "</tbody></table>";
+                resultContainer.innerHTML = tableHtml;
+
+            } catch (error) {
+                // Gestione errori di sintassi SQL
+                errorMsg.innerText = "Errore SQL: " + error.message;
+            }
+        }
+
+        // Esegui la query di default all'apertura
+        window.onload = eseguiQuery;
+    </script>
+</body>
+</html>
