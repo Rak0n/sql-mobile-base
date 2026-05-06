@@ -91,6 +91,60 @@
             background-color: #f8f9fa;
             font-weight: bold;
         }
+        /* Stili per la Cheat Sheet */
+        .details-content {
+            padding: 10px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .details-content h3 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #0056b3;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .details-content ul, .details-content ol {
+            margin-top: 5px;
+            padding-left: 20px;
+        }
+        .details-content li {
+            margin-bottom: 5px;
+        }
+        .details-content code {
+            background-color: #eee;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #d14;
+        }
+        .details-content pre {
+            background: #272822;
+            color: #f8f8f2;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+        .details-content pre code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+        }
+        .cheat-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+        .cheat-table th, .cheat-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            font-size: 0.9rem;
+        }
+        .cheat-table th {
+            background-color: #f4f4f9;
+        }
     </style>
 </head>
 <body>
@@ -142,6 +196,80 @@
 - area_perc (FLOAT)
 - famiglia (STRING)
         </pre>
+    </details>
+
+    <!-- SQL Cheat Sheet -->
+    <details>
+        <summary>📖 SQL Ultimate Cheat Sheet (Clicca per aprire)</summary>
+        <div class="details-content">
+            <p>Questa guida riassume tutta la sintassi necessaria per l'estrazione e l'analisi dei dati.</p>
+
+            <h3>1. L'Ordine Sacro delle Clausole</h3>
+            <p>SQL è una lingua gerarchica. Non puoi cambiare l'ordine di questi comandi:</p>
+            <ol>
+                <li><strong><code>SELECT</code></strong> : Cosa vuoi vedere (colonne o calcoli).</li>
+                <li><strong><code>FROM</code></strong> : La tabella principale di partenza.</li>
+                <li><strong><code>JOIN</code></strong> : Altre tabelle da collegare (usando <code>ON</code>).</li>
+                <li><strong><code>WHERE</code></strong> : Filtri sulle righe singole (es. <code>temperatura > 500</code>).</li>
+                <li><strong><code>GROUP BY</code></strong> : Raggruppamento (obbligatorio se usi SUM, AVG, COUNT).</li>
+                <li><strong><code>HAVING</code></strong> : Filtro sui gruppi (es. "mostra solo gruppi con media > 10").</li>
+                <li><strong><code>ORDER BY</code></strong> : Ordinamento finale (<code>ASC</code> o <code>DESC</code>).</li>
+                <li><strong><code>LIMIT</code></strong> : Quante righe mostrare (es. <code>LIMIT 5</code>).</li>
+            </ol>
+
+            <h3>🔍 2. Filtri e Operatori (WHERE)</h3>
+            <table class="cheat-table">
+                <thead>
+                    <tr><th>Operatore</th><th>Significato</th><th>Esempio</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>=</code> , <code>&lt;&gt;</code></td><td>Uguale, Diverso</td><td><code>famiglia &lt;&gt; 'Aromatics'</code></td></tr>
+                    <tr><td><code>&gt;</code> , <code>&lt;</code></td><td>Maggiore, Minore</td><td><code>temperatura &gt; 520</code></td></tr>
+                    <tr><td><code>BETWEEN</code></td><td>Compreso tra</td><td><code>prezzo BETWEEN 10 AND 20</code></td></tr>
+                    <tr><td><code>IN (...)</code></td><td>In una lista</td><td><code>categoria IN ('Biomass', 'Catalyst')</code></td></tr>
+                    <tr><td><code>LIKE</code></td><td>Ricerca parziale</td><td><code>%</code> (molti), <code>_</code> (uno)</td></tr>
+                    <tr><td><code>IS NULL</code></td><td>Cella vuota</td><td><code>WHERE catalizzatore IS NULL</code></td></tr>
+                </tbody>
+            </table>
+
+            <h3>📊 3. Funzioni di Aggregazione (Verticali)</h3>
+            <p><em>Si usano per fare statistiche su intere colonne.</em></p>
+            <ul>
+                <li><code>COUNT(*)</code> : Conta quante righe ci sono.</li>
+                <li><code>SUM(colonna)</code> : Somma totale.</li>
+                <li><code>AVG(colonna)</code> : Media.</li>
+                <li><code>MIN(colonna)</code> / <code>MAX(colonna)</code> : Valore minimo o massimo.</li>
+            </ul>
+
+            <h3>🔗 4. Il Potere dei JOIN</h3>
+            <ul>
+                <li><strong><code>INNER JOIN</code></strong> : Mostra solo le righe che hanno una corrispondenza in <strong>entrambe</strong> le tabelle.</li>
+                <li><strong><code>LEFT JOIN</code></strong> : Mostra <strong>tutte</strong> le righe della tabella a sinistra (quella nel <code>FROM</code>), anche se non trovano nulla in quella a destra.</li>
+            </ul>
+
+            <h3>🧪 5. Manipolazione Dati e Funzioni "Cool"</h3>
+            <p><strong>Concatenazione (Incollare testi):</strong> Usa <code>||</code> per unire colonne e testo fisso.</p>
+<pre><code>SELECT nome_esteso || ' [ID: ' || id || ']' AS etichetta
+-- Risultato: "Wood Chips [ID: FS_001]"</code></pre>
+
+            <p><strong>Logica Condizionale (Il "SE" di Excel):</strong> Usa <code>CASE WHEN</code> per creare categorie.</p>
+<pre><code>SELECT id_run,
+  CASE 
+    WHEN resa_olio > 45 THEN 'Alta'
+    WHEN resa_olio > 30 THEN 'Media'
+    ELSE 'Bassa'
+  END AS valutazione_resa
+FROM runs_pirolisi;</code></pre>
+
+            <p><strong>Matematica Semplice:</strong> Puoi usare <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code> tra colonne.</p>
+<pre><code>SELECT (resa_olio / resa_totale) * 100 AS percentuale_olio</code></pre>
+
+            <h3>💡 6. La Regola d'Oro del GROUP BY</h3>
+            <p>Se nella <code>SELECT</code> hai una colonna "normale" e una "calcolata", la normale <strong>deve</strong> essere ripetuta nel <code>GROUP BY</code>.</p>
+<pre><code>SELECT categoria, AVG(c_mean) -- categoria è normale
+FROM feedstocks
+GROUP BY categoria; -- quindi va qui!</code></pre>
+        </div>
     </details>
 
     <!-- Area Query -->
